@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pixelated Pong</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Disable scrolling */
+            background-color: #000;
+        }
+
+        #pongCanvas {
+            background-color: #000;
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="pongCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('pongCanvas');
+        const context = canvas.getContext('2d');
+
+        canvas.width = 640;
+        canvas.height = 480;
+
+        const paddleWidth = 60;
+        const paddleHeight = 10;
+        const ballSize = 10;
+
+        const player = {
+            x: canvas.width / 2 - paddleWidth / 2,
+            y: canvas.height - paddleHeight - 10, // Positioned 10px from the bottom
+            width: paddleWidth,
+            height: paddleHeight,
+            dx: 0,
+        };
+
+        const ball = {
+            x: canvas.width / 2 - ballSize / 2,
+            y: canvas.height / 2 - ballSize / 2,
+            width: ballSize,
+            height: ballSize,
+            dx: 2,
+            dy: -2,
+        };
+
+        function drawRect(x, y, width, height, color) {
+            context.fillStyle = color;
+            context.fillRect(x, y, width, height);
+        }
+
+        function draw() {
+            drawRect(0, 0, canvas.width, canvas.height, '#000'); // Clear the canvas
+            drawRect(player.x, player.y, player.width, player.height, '#fff');
+            drawRect(ball.x, ball.y, ball.width, ball.height, '#fff');
+        }
+
+        function update() {
+            // Player movement
+            player.x += player.dx;
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+            // Ball movement
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Ball collision with top and bottom walls
+            if (ball.y < 0) {
+                ball.dy *= -1;
+            }
+
+            // Ball collision with the player's paddle
+            if (ball.y + ball.height > player.y && ball.x > player.x && ball.x < player.x + player.width) {
+                ball.dy *= -1;
+            }
+
+            // Ball collision with the right wall
+            if (ball.x + ball.width > canvas.width) {
+                ball.dx *= -1;
+            }
+
+            // Ball collision with the left wall
+            if (ball.x < 0) {
+                ball.dx *= -1;
+            }
+
+            // Reset ball if it goes off the bottom of the screen
+            if (ball.y > canvas.height) {
+                ball.x = canvas.width / 2 - ballSize / 2;
+                ball.y = canvas.height / 2 - ballSize / 2;
+                ball.dx = 2;
+                ball.dy = -2;
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function handleTouchMove(event) {
+            const rect = canvas.getBoundingClientRect();
+            player.x = event.touches[0].clientX - rect.left - player.width / 2;
+        }
+
+        function handleMouseMove(event) {
+            const rect = canvas.getBoundingClientRect();
+            player.x = event.clientX - rect.left - player.width / 2;
+        }
+
+        if ('ontouchstart' in window) {
+            canvas.addEventListener('touchmove', handleTouchMove);
+        } else {
+            canvas.addEventListener('mousemove', handleMouseMove);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
